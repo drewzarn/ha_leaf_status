@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
+import 'config.dart';
+
 main() async {
   NissanConnectSession session = new NissanConnectSession(debug: false);
-  final client = MqttServerClient('', '');
+  final client = MqttServerClient(config['MQTT_HOST'], config['MQTT_USER']);
   try {
     await client.connect();
   } on NoConnectionException catch (e) {
@@ -29,12 +31,12 @@ main() async {
     exit(-1);
   }
 
-  const statusTopic = 'leaf/status';
+  final statusTopic = config['MQTT_TOPIC'];
   final builder = MqttClientPayloadBuilder();
   client.subscribe(statusTopic, MqttQos.exactlyOnce);
 
   session
-      .login(username: 'dzarn@amovita.net', password: r'')
+      .login(username: config['NISSAN_USER'], password: config['NISSAN_PASS'])
       .then((vehicle) {
 
     vehicle.requestBatteryStatus().then((battery) {

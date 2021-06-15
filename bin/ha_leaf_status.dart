@@ -35,31 +35,31 @@ main() async {
   final builder = MqttClientPayloadBuilder();
   client.subscribe(statusTopic, MqttQos.exactlyOnce);
 
-  session
-      .login(username: config['NISSAN_USER'], password: config['NISSAN_PASS'])
-      .then((vehicle) {
+  final vehicle = await session.login(
+      username: config['NISSAN_USER'], password: config['NISSAN_PASS']);
 
-    vehicle.requestBatteryStatus().then((battery) {
-      var jsonBattery = {
-        'vin': vehicle.vin,
-        'nickname': vehicle.nickname,
-        'updated': battery.dateTime.toString(),
-        'batterylevel': battery.batteryLevel,
-        'range': battery.cruisingRangeAcOnMiles,
-        'plugged_in': battery.isConnected,
-        'charging': battery.isCharging,
-        'charge_time_trickle': battery.timeToFullTrickle.toString(),
-        'charge_time_l2': battery.timeToFullL2.toString(),
-        'charge_time_6kw': battery.timeToFullL2_6kw.toString(),
-        'twelfth_bar': battery.battery12thBar
-      };
-      print(jsonBattery);
+  final battery = await vehicle.requestBatteryStatus();
 
-      builder.clear();
-      builder.addString(jsonEncode(jsonBattery));
-      client.publishMessage(statusTopic, MqttQos.exactlyOnce, builder.payload!);
+  var jsonBattery = {
+    'vin': vehicle.vin,
+    'nickname': vehicle.nickname,
+    'updated': battery.dateTime.toString(),
+    'batterylevel': battery.batteryLevel,
+    'range': battery.cruisingRangeAcOnMiles,
+    'plugged_in': battery.isConnected,
+    'charging': battery.isCharging,
+    'charge_time_trickle': battery.timeToFullTrickle.toString(),
+    'charge_time_l2': battery.timeToFullL2.toString(),
+    'charge_time_6kw': battery.timeToFullL2_6kw.toString(),
+    'twelfth_bar': battery.battery12thBar
+  };
+  print(jsonBattery);
 
-      exit(0);
-    });
-  });
+  builder.clear();
+  builder.addString(jsonEncode(jsonBattery));
+  client.publishMessage(statusTopic, MqttQos.exactlyOnce, builder.payload!);
+
+  await Future.delayed(Duration(seconds: 2));
+
+  exit(0);
 }
